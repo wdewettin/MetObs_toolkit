@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>metobs_toolkit.plotting_functions &mdash; metobs_toolkit 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            metobs_toolkit
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../template_mapping.html">Mapping to the toolkit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gee_authentication.html">Using Google Earth Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../special_topics.html">Special topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gui.html">Using the GUI</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetObs_documentation.html">MetObs toolkit Documentation for Users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetObs_documentation_full.html">MetObs toolkit Documentation for developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">metobs_toolkit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">metobs_toolkit.plotting_functions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for metobs_toolkit.plotting_functions</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Oct 21 11:26:52 2022</span>
+
+<span class="sd">@author: thoverga</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="kn">import</span> <span class="n">Normalize</span>
+<span class="kn">from</span> <span class="nn">matplotlib.lines</span> <span class="kn">import</span> <span class="n">Line2D</span>
+<span class="kn">import</span> <span class="nn">matplotlib.gridspec</span> <span class="k">as</span> <span class="nn">gridspec</span>
+<span class="kn">import</span> <span class="nn">matplotlib.dates</span> <span class="k">as</span> <span class="nn">mdates</span>
+<span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="kn">import</span> <span class="n">LineCollection</span>
+
+<span class="kn">import</span> <span class="nn">geemap.foliumap</span> <span class="k">as</span> <span class="nn">foliumap</span>
+<span class="kn">import</span> <span class="nn">folium</span>
+
+<span class="kn">from</span> <span class="nn">metobs_toolkit.geometry_functions</span> <span class="kn">import</span> <span class="n">find_largest_extent</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
+
+<span class="kn">from</span> <span class="nn">metobs_toolkit.landcover_functions</span> <span class="kn">import</span> <span class="n">get_ee_obj</span>
+<span class="kn">from</span> <span class="nn">metobs_toolkit.df_helpers</span> <span class="kn">import</span> <span class="n">xs_save</span>
+
+
+
+<div class="viewcode-block" id="folium_plot"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.plotting_functions.folium_plot.html#metobs_toolkit.plotting_functions.folium_plot">[docs]</a><span class="k">def</span> <span class="nf">folium_plot</span><span class="p">(</span><span class="n">mapinfo</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="n">vis_params</span><span class="p">,</span> <span class="n">labelnames</span><span class="p">,</span> <span class="n">layername</span><span class="p">,</span>
+                <span class="n">basemap</span><span class="o">=</span><span class="s1">&#39;SATELLITE&#39;</span><span class="p">,</span> <span class="n">legendname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">legendpos</span><span class="o">=</span><span class="s1">&#39;bottomleft&#39;</span><span class="p">):</span>
+    <span class="c1"># get the ee.Image</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">get_ee_obj</span><span class="p">(</span><span class="n">mapinfo</span><span class="p">,</span> <span class="n">band</span><span class="p">)</span>
+
+    <span class="c1"># make plot</span>
+    <span class="n">MAP</span> <span class="o">=</span> <span class="n">foliumap</span><span class="o">.</span><span class="n">Map</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">basemap</span><span class="p">:</span>
+        <span class="n">MAP</span><span class="o">.</span><span class="n">add_basemap</span><span class="p">(</span><span class="n">basemap</span><span class="p">)</span>
+    <span class="n">MAP</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">vis_params</span><span class="p">,</span> <span class="n">layername</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">legendname</span><span class="p">:</span>
+        <span class="n">MAP</span><span class="o">.</span><span class="n">add_legend</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">legendname</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="n">labelnames</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">vis_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;palette&#39;</span><span class="p">),</span> <span class="n">position</span><span class="o">=</span><span class="n">legendpos</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">MAP</span></div>
+
+
+
+<div class="viewcode-block" id="add_stations_to_folium_map"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.plotting_functions.add_stations_to_folium_map.html#metobs_toolkit.plotting_functions.add_stations_to_folium_map">[docs]</a><span class="k">def</span> <span class="nf">add_stations_to_folium_map</span><span class="p">(</span><span class="n">Map</span><span class="p">,</span> <span class="n">metadf</span><span class="p">):</span>
+
+    <span class="n">points</span> <span class="o">=</span> <span class="n">metadf</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">station</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">folium</span><span class="o">.</span><span class="n">Marker</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="p">[</span> <span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">point</span><span class="o">.</span><span class="n">x</span> <span class="p">],</span>
+                      <span class="n">fill_color</span><span class="o">=</span><span class="s1">&#39;#43d9de&#39;</span><span class="p">,</span>
+                      <span class="n">popup</span><span class="o">=</span><span class="n">station</span><span class="p">,</span>
+                      <span class="n">radius</span><span class="o">=</span><span class="mi">8</span> <span class="p">)</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span> <span class="n">Map</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Map</span></div>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Helpers</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="map_obstype"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.plotting_functions.map_obstype.html#metobs_toolkit.plotting_functions.map_obstype">[docs]</a><span class="k">def</span> <span class="nf">map_obstype</span><span class="p">(</span><span class="n">obstype</span><span class="p">,</span> <span class="n">template</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">template</span><span class="p">[</span><span class="n">obstype</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span></div>
+
+
+
+
+<div class="viewcode-block" id="make_cat_colormapper"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.plotting_functions.make_cat_colormapper.html#metobs_toolkit.plotting_functions.make_cat_colormapper">[docs]</a><span class="k">def</span> <span class="nf">make_cat_colormapper</span><span class="p">(</span><span class="n">catlist</span><span class="p">,</span> <span class="n">cmapname</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a dictionary {cat : color} for a list of categorical values.</span>
+
+<span class="sd">    If the colormap has more colors than the catlist, optimal color distance is</span>
+<span class="sd">    done. If a colormap has less colors than unique categories, the categories are grourped.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    catlist : list</span>
+<span class="sd">        List of categorical values.</span>
+<span class="sd">    cmapname : str</span>
+<span class="sd">        Matplotlib.colormaps name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    colordict : dict</span>
+<span class="sd">        {cat: color} where the color is a RGBalpha tuple.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">catlist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">catlist</span><span class="p">))</span> <span class="c1">#get unique categories</span>
+
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colormaps</span><span class="p">[</span><span class="n">cmapname</span><span class="p">]</span>
+
+    <span class="c1"># check number of colors in the cmap</span>
+    <span class="k">if</span> <span class="n">cmap</span><span class="o">.</span><span class="n">N</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">catlist</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Warning: colormap: </span><span class="si">{</span><span class="n">cmapname</span><span class="si">}</span><span class="s1">, is not well suited to color </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">catlist</span><span class="p">)</span><span class="si">}</span><span class="s1"> categories. &#39;</span><span class="p">)</span>
+        <span class="n">same_col_n_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">catlist</span><span class="p">)</span> <span class="o">/</span> <span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+
+        <span class="c1"># group cateogries and color them by group</span>
+        <span class="n">colordict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">col_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">_cat_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">catlist</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_cat_index</span><span class="o">%</span><span class="n">same_col_n_groups</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">col_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">colordict</span><span class="p">[</span><span class="n">cat</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">col_idx</span><span class="p">))</span>
+            <span class="n">_cat_index</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">colordict</span>
+
+    <span class="c1"># check if the colormap can be decreased (and thus increasing the colordistance)</span>
+    <span class="n">num_increase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">cmap</span><span class="o">.</span><span class="n">N</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">catlist</span><span class="p">))</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">colordict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">catlist</span><span class="p">:</span>
+        <span class="n">colordict</span><span class="p">[</span><span class="n">cat</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="n">num_increase</span>
+    <span class="k">return</span> <span class="n">colordict</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Plotters</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="geospatial_plot"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.plotting_functions.geospatial_plot.html#metobs_toolkit.plotting_functions.geospatial_plot">[docs]</a><span class="k">def</span> <span class="nf">geospatial_plot</span><span class="p">(</span>
+    <span class="n">plotdf</span><span class="p">,</span>
+    <span class="n">variable</span><span class="p">,</span>
+    <span class="n">timeinstance</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">,</span>
+    <span class="n">legend</span><span class="p">,</span>
+    <span class="n">vmin</span><span class="p">,</span>
+    <span class="n">vmax</span><span class="p">,</span>
+    <span class="n">plotsettings</span><span class="p">,</span>
+    <span class="n">categorical_fields</span><span class="p">,</span>
+    <span class="n">static_fields</span><span class="p">,</span>
+    <span class="n">display_name_mapper</span><span class="p">,</span>
+    <span class="n">world_boundaries_map</span><span class="p">,</span>
+    <span class="n">data_template</span>
+<span class="p">):</span>
+    <span class="c1"># Load default plot settings</span>
+    <span class="n">default_settings</span> <span class="o">=</span> <span class="n">plotsettings</span><span class="p">[</span><span class="s2">&quot;spatial_geo&quot;</span><span class="p">]</span>
+
+    <span class="c1"># subset to obstype</span>
+    <span class="n">plotdf</span> <span class="o">=</span> <span class="n">plotdf</span><span class="p">[[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">]]</span>
+
+    <span class="c1"># Subset to the stations that have coordinates</span>
+    <span class="n">ignored_stations</span> <span class="o">=</span> <span class="n">plotdf</span><span class="p">[</span><span class="n">plotdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">()]</span>
+    <span class="n">plotdf</span> <span class="o">=</span> <span class="n">plotdf</span><span class="p">[</span><span class="o">~</span><span class="n">plotdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="n">plotdf</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No coordinate data found, geoplot can not be made. Plotdf: </span><span class="si">{</span><span class="n">plotdf</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ignored_stations</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="c1"># logger.error(f&#39;No coordinate found for following stations: {ignored_stations.index.to_list()}, these will be ignored in the geo-plot!&#39;)</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;No coordinate found for following stations: </span><span class="si">{</span><span class="n">ignored_stations</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span><span class="si">}</span><span class="s2">, these will be ignored in the geo-plot!&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># make legend/colorbar title</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">templ_map</span> <span class="o">=</span> <span class="n">map_obstype</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">data_template</span><span class="p">)</span>
+        <span class="n">legend_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">templ_map</span><span class="p">[</span><span class="s2">&quot;orig_name&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">templ_map</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">)&#39;</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">legend_title</span> <span class="o">=</span> <span class="n">variable</span>
+
+    <span class="c1"># make color scheme for field</span>
+    <span class="k">if</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">categorical_fields</span><span class="p">:</span>
+        <span class="n">is_categorical</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">variable</span> <span class="o">==</span> <span class="s2">&quot;lcz&quot;</span><span class="p">:</span>
+            <span class="n">legend_title</span> <span class="o">=</span> <span class="s1">&#39;LCZ&#39;</span>
+            <span class="c1"># use all available LCZ categories</span>
+            <span class="n">use_quantiles</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">use_quantiles</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">is_categorical</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">use_quantiles</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># if observations extend is contained by default exten, use default else use obs extend</span>
+    <span class="n">use_extent</span> <span class="o">=</span> <span class="n">find_largest_extent</span><span class="p">(</span>
+        <span class="n">geodf</span><span class="o">=</span><span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">plotdf</span><span class="p">),</span> <span class="n">extentlist</span><span class="o">=</span><span class="n">default_settings</span><span class="p">[</span><span class="s2">&quot;extent&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Style attributes</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">static_fields</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">display_name_mapper</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dtstring</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">timeinstance</span><span class="p">,</span> <span class="n">default_settings</span><span class="p">[</span><span class="s2">&quot;fmt&quot;</span><span class="p">])</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">display_name_mapper</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; at &quot;</span> <span class="o">+</span> <span class="n">dtstring</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">_spatial_plot</span><span class="p">(</span>
+        <span class="n">gdf</span><span class="o">=</span><span class="n">plotdf</span><span class="p">,</span>
+        <span class="n">variable</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span>
+        <span class="n">legend</span><span class="o">=</span><span class="n">legend</span><span class="p">,</span>
+        <span class="n">use_quantiles</span><span class="o">=</span><span class="n">use_quantiles</span><span class="p">,</span>
+        <span class="n">is_categorical</span><span class="o">=</span><span class="n">is_categorical</span><span class="p">,</span>
+        <span class="n">k_quantiles</span><span class="o">=</span><span class="n">default_settings</span><span class="p">[</span><span class="s2">&quot;n_for_categorical&quot;</span><span class="p">],</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">default_settings</span><span class="p">[</span><span class="s2">&quot;cmap&quot;</span><span class="p">],</span>
+        <span class="n">world_boundaries_map</span><span class="o">=</span><span class="n">world_boundaries_map</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="n">default_settings</span><span class="p">[</span><span class="s2">&quot;figsize&quot;</span><span class="p">],</span>
+        <span class="n">extent</span><span class="o">=</span><span class="n">use_extent</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">legend_title</span><span class="o">=</span><span class="n">legend_title</span><span class="p">,</span>
+        <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span>
+        <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">ax</span></div>
+
+
+<span class="k">def</span> <span class="nf">_spatial_plot</span><span class="p">(</span>
+    <span class="n">gdf</span><span class="p">,</span>
+    <span class="n">variable</span><span class="p">,</span>
+    <span class="n">legend</span><span class="p">,</span>
+    <span class="n">use_quantiles</span><span class="p">,</span>
+    <span class="n">is_categorical</span><span class="p">,</span>
+    <span class="n">k_quantiles</span><span class="p">,</span>
+    <span class="n">cmap</span><span class="p">,</span>
+    <span class="n">world_boundaries_map</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="p">,</span>
+    <span class="n">extent</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">,</span>
+    <span class="n">legend_title</span><span class="p">,</span>
+    <span class="n">vmin</span><span class="p">,</span>
+    <span class="n">vmax</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="c1"># TODO: docstring + beter positionion of the lengends</span>
+    <span class="n">gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">gdf</span><span class="p">)</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+
+    <span class="c1"># Make color scheme</span>
+    <span class="k">if</span> <span class="n">use_quantiles</span><span class="p">:</span>
+        <span class="c1"># maybe better to use evenly spaced intervals rather than quantiles?</span>
+        <span class="n">scheme</span> <span class="o">=</span> <span class="s2">&quot;equalinterval&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">scheme</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span> <span class="o">|</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vmax</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)):</span>
+            <span class="n">vmin</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="n">vmax</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">is_categorical</span><span class="p">:</span>
+        <span class="c1"># categorical legend</span>
+        <span class="n">legend_kwds</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;loc&quot;</span><span class="p">:</span> <span class="s2">&quot;best&quot;</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">legend_title</span><span class="p">}</span>
+        <span class="n">vmin</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">vmax</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">cax</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># colorbar</span>
+        <span class="n">legend_kwds</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">legend_title</span><span class="p">}</span>
+        <span class="n">divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+        <span class="n">cax</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;5%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+    <span class="c1"># world map as underlayer</span>
+    <span class="n">world_boundaries</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">world_boundaries_map</span><span class="p">)</span>
+    <span class="n">world_boundaries</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+
+    <span class="c1"># add observations as scatters</span>
+    <span class="n">gdf</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="n">column</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span>
+        <span class="n">scheme</span><span class="o">=</span><span class="n">scheme</span><span class="p">,</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+        <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span>
+        <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">,</span>
+        <span class="c1"># edgecolor=&#39;white&#39;,</span>
+        <span class="c1"># linewidth=0.5,</span>
+        <span class="c1"># scale=&#39;NUMBER OF PERSONS KILLED&#39;,</span>
+        <span class="c1"># limits=(8, 24),</span>
+        <span class="n">categorical</span><span class="o">=</span><span class="n">is_categorical</span><span class="p">,</span>
+        <span class="n">legend</span><span class="o">=</span><span class="n">legend</span><span class="p">,</span>
+        <span class="c1"># legend_var=&#39;scale&#39;,</span>
+        <span class="c1"># legend_kwargs={&#39;loc&#39;: &#39;upper left&#39;, &#39;markeredgecolor&#39;: &#39;black&#39;},</span>
+        <span class="c1"># legend_values=[2, 1], legend_labels=[&#39;2 Fatalities&#39;, &#39;1 Fatality&#39;],</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+        <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">,</span>
+        <span class="n">legend_kwds</span><span class="o">=</span><span class="n">legend_kwds</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># set extent</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">right</span><span class="o">=</span><span class="n">extent</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">top</span><span class="o">=</span><span class="n">extent</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ax</span>
+
+
+<span class="k">def</span> <span class="nf">_sorting_function</span><span class="p">(</span><span class="n">label_vec</span><span class="p">,</span> <span class="n">custom_handles</span><span class="p">,</span> <span class="n">number_of_labels_types</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+    <span class="c1"># TODO: clean this up? rewrite to better code?</span>
+    <span class="n">sorted_vec</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># group 1, 2, 3</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_labels_types</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span> <span class="c1"># loop over the type of labels</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">label_vec</span><span class="p">)):</span> <span class="c1">#loop over the length of the label_vec</span>
+            <span class="k">if</span> <span class="n">label_vec</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span><span class="p">:</span>
+                <span class="n">sorted_vec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+                <span class="c1"># makes a vector of same size as label_vec</span>
+                <span class="c1"># but with the right order of permutations.</span>
+    <span class="n">sorted_handles</span> <span class="o">=</span> <span class="p">[</span><span class="n">custom_handles</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sorted_vec</span><span class="p">]</span>
+    <span class="c1"># reordering the custom handles to put 1 at the front</span>
+
+    <span class="k">return</span> <span class="n">sorted_handles</span>
+
+<span class="k">def</span> <span class="nf">_format_datetime_axis</span><span class="p">(</span><span class="n">axes</span><span class="p">):</span>
+    <span class="n">xtick_locator</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">AutoDateLocator</span><span class="p">()</span>
+    <span class="n">xtick_formatter</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">AutoDateFormatter</span><span class="p">(</span><span class="n">xtick_locator</span><span class="p">)</span>
+
+    <span class="n">axes</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">xtick_locator</span><span class="p">)</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">xtick_formatter</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">axes</span>
+
+<span class="k">def</span> <span class="nf">_create_linecollection</span><span class="p">(</span><span class="n">linedf</span><span class="p">,</span> <span class="n">colormapper</span><span class="p">,</span> <span class="n">linestylemapper</span><span class="p">,</span>
+                          <span class="n">plotsettings</span><span class="p">,</span> <span class="n">const_color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_col_name</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                          <span class="n">label_col_name</span><span class="o">=</span><span class="s1">&#39;label&#39;</span><span class="p">):</span>
+
+    <span class="c1"># 1. convert datetime to numerics values</span>
+    <span class="k">if</span> <span class="n">linedf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;datetime&#39;</span><span class="p">:</span>
+        <span class="n">inxval</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">linedf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_pydatetime</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">linedf</span> <span class="o">=</span> <span class="n">linedf</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="n">linedf</span> <span class="o">=</span> <span class="n">linedf</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;datetime&#39;</span><span class="p">)</span>
+        <span class="n">inxval</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">linedf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_pydatetime</span><span class="p">())</span>
+
+    <span class="c1"># 2. convert df to segments</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">inxval</span><span class="p">,</span> <span class="n">linedf</span><span class="p">[</span><span class="n">value_col_name</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">segments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">points</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">points</span><span class="p">[</span><span class="mi">1</span><span class="p">:]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># 3. get styling info</span>
+    <span class="k">if</span> <span class="n">const_color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">linedf</span><span class="p">[</span><span class="n">label_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">colormapper</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">color</span> <span class="o">=</span><span class="p">[</span><span class="n">const_color</span><span class="p">]</span> <span class="o">*</span> <span class="n">linedf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">linewidth</span><span class="o">=</span><span class="p">[</span><span class="n">plotsettings</span><span class="p">[</span><span class="s1">&#39;time_series&#39;</span><span class="p">][</span><span class="s1">&#39;linewidth&#39;</span><span class="p">]]</span> <span class="o">*</span> <span class="n">linedf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">zorder</span> <span class="o">=</span> <span class="n">plotsettings</span><span class="p">[</span><span class="s1">&#39;time_series&#39;</span><span class="p">][</span><span class="s1">&#39;linezorder&#39;</span><span class="p">]</span>
+    <span class="n">linestyle</span> <span class="o">=</span> <span class="n">linedf</span><span class="p">[</span><span class="n">label_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">linestylemapper</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+
+    <span class="c1"># 4. Make line collection</span>
+    <span class="n">lc</span> <span class="o">=</span> <span class="n">LineCollection</span><span class="p">(</span><span class="n">segments</span><span class="o">=</span><span class="n">segments</span><span class="p">,</span>
+                        <span class="n">colors</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                        <span class="n">linewidths</span><span class="o">=</span><span class="n">linewidth</span><span class="p">,</span>
+                        <span class="n">zorder</span><span class="o">=</span><span class="n">zorder</span><span class="p">,</span>
+                        <span class="n">linestyle</span><span class="o">=</span><span class="n">linestyle</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">lc</span>
+
+<div class="viewcode-block" id="timeseries_plot"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.plotting_functions.timeseries_plot.html#metobs_toolkit.plotting_functions.timeseries_plot">[docs]</a><span class="k">def</span> <span class="nf">timeseries_plot</span><span class="p">(</span>
+    <span class="n">mergedf</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="p">,</span>
+    <span class="n">colorby</span><span class="p">,</span>
+    <span class="n">show_legend</span><span class="p">,</span>
+    <span class="n">show_outliers</span><span class="p">,</span>
+    <span class="n">show_filled</span><span class="p">,</span>
+    <span class="n">settings</span><span class="p">,</span>
+    <span class="n">_ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="c1">#needed for GUI, not recommended use</span>
+    <span class="n">colorby_name_colordict</span><span class="o">=</span><span class="kc">None</span> <span class="c1">#when colorscheme will be reused</span>
+<span class="p">):</span>
+
+    <span class="n">plot_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">app</span><span class="p">[</span><span class="s2">&quot;plot_settings&quot;</span><span class="p">]</span>
+
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_ax</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)):</span>
+        <span class="c1"># init figure</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;time_series&quot;</span><span class="p">][</span><span class="s2">&quot;figsize&quot;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">_ax</span>
+
+
+    <span class="c1"># get data ready</span>
+    <span class="n">mergedf</span> <span class="o">=</span> <span class="n">mergedf</span><span class="p">[</span><span class="o">~</span><span class="n">mergedf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()]</span>
+
+
+    <span class="c1"># get min max datetime to set xrange</span>
+    <span class="n">dt_min</span> <span class="o">=</span> <span class="n">mergedf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;datetime&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">dt_max</span> <span class="o">=</span> <span class="n">mergedf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;datetime&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+
+    <span class="c1"># define different groups (different plotting styles)</span>
+
+    <span class="c1"># ok group</span>
+    <span class="n">ok_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ok&#39;</span><span class="p">]</span>
+
+    <span class="c1"># filled value groups</span>
+    <span class="n">fill_labels</span><span class="o">=</span> <span class="p">[</span> <span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">gap</span><span class="p">[</span><span class="s1">&#39;gaps_fill_info&#39;</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">missing_fill_labels</span> <span class="o">=</span> <span class="p">[</span> <span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">missing_obs</span><span class="p">[</span><span class="s1">&#39;missing_obs_fill_info&#39;</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">fill_labels</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">missing_fill_labels</span><span class="p">)</span>
+
+    <span class="c1"># qc outlier labels</span>
+    <span class="n">qc_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">[</span><span class="s1">&#39;outlier_flag&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">qc</span><span class="p">[</span><span class="s1">&#39;qc_checks_info&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+
+    <span class="c1"># no value group</span>
+    <span class="n">no_vals_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">settings</span><span class="o">.</span><span class="n">gap</span><span class="p">[</span><span class="s1">&#39;gaps_info&#39;</span><span class="p">][</span><span class="s1">&#39;gap&#39;</span><span class="p">][</span><span class="s1">&#39;outlier_flag&#39;</span><span class="p">],</span>
+                      <span class="n">settings</span><span class="o">.</span><span class="n">gap</span><span class="p">[</span><span class="s1">&#39;gaps_info&#39;</span><span class="p">][</span><span class="s1">&#39;missing_timestamp&#39;</span><span class="p">][</span><span class="s1">&#39;outlier_flag&#39;</span><span class="p">]]</span>
+    <span class="n">no_vals_df</span> <span class="o">=</span> <span class="n">mergedf</span><span class="p">[</span><span class="n">mergedf</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">no_vals_labels</span><span class="p">)]</span>
+
+
+    <span class="k">if</span> <span class="n">colorby</span> <span class="o">==</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span>
+
+        <span class="c1"># aggregate groups and make styling mappers</span>
+
+        <span class="n">col_mapper</span> <span class="o">=</span> <span class="n">_all_possible_labels_colormapper</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span> <span class="c1"># get color mapper</span>
+
+        <span class="c1"># linestyle mapper</span>
+        <span class="n">line_mapper</span> <span class="o">=</span> <span class="p">{</span><span class="n">lab</span><span class="p">:</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;time_series&#39;</span><span class="p">][</span><span class="s1">&#39;linestyle_ok&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">ok_labels</span><span class="p">}</span>
+        <span class="n">line_mapper</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">lab</span><span class="p">:</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;time_series&#39;</span><span class="p">][</span><span class="s1">&#39;linestyle_fill&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">fill_labels</span><span class="p">})</span>
+
+        <span class="c1"># set hight of the vertical lines for no vals</span>
+        <span class="n">vlin_min</span> <span class="o">=</span> <span class="n">mergedf</span><span class="p">[</span><span class="n">mergedf</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ok&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">vlin_max</span> <span class="o">=</span> <span class="n">mergedf</span><span class="p">[</span><span class="n">mergedf</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ok&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+        <span class="c1"># line labels</span>
+        <span class="n">line_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ok&#39;</span><span class="p">]</span>
+        <span class="n">line_labels</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fill_labels</span><span class="p">)</span>
+
+
+        <span class="c1"># ------ missing obs ------ (vertical lines)</span>
+        <span class="n">missing_df</span> <span class="o">=</span> <span class="n">mergedf</span><span class="p">[</span><span class="n">mergedf</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">no_vals_labels</span><span class="p">)]</span>
+        <span class="n">missing_df</span> <span class="o">=</span> <span class="n">missing_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">missing_df</span><span class="p">[</span><span class="s1">&#39;datetime&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span>
+                  <span class="n">ymin</span><span class="o">=</span><span class="n">vlin_min</span><span class="p">,</span>
+                  <span class="n">ymax</span><span class="o">=</span><span class="n">vlin_max</span><span class="p">,</span>
+                  <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+                  <span class="n">color</span><span class="o">=</span><span class="n">missing_df</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">col_mapper</span><span class="p">),</span>
+                  <span class="n">zorder</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;time_series&#39;</span><span class="p">][</span><span class="s2">&quot;dashedzorder&quot;</span><span class="p">],</span>
+                  <span class="n">linewidth</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;time_series&#39;</span><span class="p">][</span><span class="s2">&quot;linewidth&quot;</span><span class="p">])</span>
+
+
+
+        <span class="c1"># ------ outliers ------ (scatters)</span>
+        <span class="n">outlier_df</span> <span class="o">=</span> <span class="n">mergedf</span><span class="p">[</span><span class="n">mergedf</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">qc_labels</span><span class="p">)]</span>
+        <span class="n">outlier_df</span> <span class="o">=</span> <span class="n">outlier_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="n">outlier_df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;scatter&quot;</span><span class="p">,</span>
+            <span class="n">x</span><span class="o">=</span><span class="s2">&quot;datetime&quot;</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">outlier_df</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">col_mapper</span><span class="p">),</span>
+            <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">zorder</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;time_series&quot;</span><span class="p">][</span><span class="s2">&quot;scatterzorder&quot;</span><span class="p">],</span>
+            <span class="n">s</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;time_series&quot;</span><span class="p">][</span><span class="s2">&quot;scattersize&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="c1"># -------- Ok and filled observation -------- (lines)</span>
+
+
+        <span class="k">for</span> <span class="n">sta</span> <span class="ow">in</span> <span class="n">mergedf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+            <span class="n">stadf</span> <span class="o">=</span> <span class="n">xs_save</span><span class="p">(</span><span class="n">mergedf</span><span class="p">,</span> <span class="n">sta</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="c1">#subset to one station</span>
+            <span class="n">linedf</span> <span class="o">=</span> <span class="n">stadf</span><span class="p">[</span><span class="n">stadf</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">line_labels</span><span class="p">)]</span> <span class="c1">#subset all obs that are repr by lines</span>
+
+            <span class="c1"># now add the other records, and convert the value to nan to avoid</span>
+            <span class="c1"># interpolation in the plot</span>
+            <span class="n">stadf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">stadf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">linedf</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="c1"># (WARNING): The above line converts all values in the mergedf, to</span>
+            <span class="c1"># Nan&#39;s if the label is not in &#39;line_labels&#39; !!! Thus plot all other</span>
+            <span class="c1"># categories in advance and the line plot at the end. The zorder,</span>
+            <span class="c1"># takes care of what is displayed on top.</span>
+
+            <span class="c1"># make line collection</span>
+            <span class="n">sta_line_lc</span> <span class="o">=</span> <span class="n">_create_linecollection</span><span class="p">(</span>
+                                <span class="n">linedf</span> <span class="o">=</span> <span class="n">stadf</span><span class="p">,</span>
+                                <span class="n">colormapper</span> <span class="o">=</span> <span class="n">col_mapper</span><span class="p">,</span>
+                                <span class="n">linestylemapper</span><span class="o">=</span><span class="n">line_mapper</span><span class="p">,</span>
+                                <span class="n">plotsettings</span> <span class="o">=</span><span class="n">plot_settings</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">sta_line_lc</span><span class="p">)</span>
+
+
+        <span class="c1"># create legend</span>
+        <span class="k">if</span> <span class="n">show_legend</span><span class="p">:</span>
+
+            <span class="n">custom_handles</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1">#add legend items to it</span>
+            <span class="n">label_vec</span><span class="o">=</span><span class="p">[]</span> <span class="c1"># add type of label</span>
+            <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">mergedf</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+                <span class="n">outl_color</span> <span class="o">=</span> <span class="n">col_mapper</span><span class="p">[</span><span class="n">label</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">ok_labels</span><span class="p">:</span>
+                    <span class="n">custom_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">outl_color</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+                    <span class="n">label_vec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">fill_labels</span><span class="p">:</span>
+                    <span class="n">custom_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">],</span>
+                            <span class="n">color</span><span class="o">=</span><span class="n">outl_color</span><span class="p">,</span>
+                            <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;filled value (</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
+                            <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                            <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,)</span>
+                        <span class="p">)</span>
+                    <span class="n">label_vec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">no_vals_labels</span><span class="p">:</span>
+                    <span class="n">custom_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                         <span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">],</span>
+                             <span class="n">color</span><span class="o">=</span><span class="n">outl_color</span><span class="p">,</span>
+                             <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                             <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span>
+                             <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                             <span class="p">)</span>
+                         <span class="p">)</span>
+                    <span class="n">label_vec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">custom_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
+                            <span class="n">markerfacecolor</span><span class="o">=</span><span class="n">outl_color</span><span class="p">,</span>
+                            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+                            <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,)</span>
+                        <span class="p">)</span>
+                    <span class="n">label_vec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+
+            <span class="n">custom_handles</span> <span class="o">=</span> <span class="n">_sorting_function</span><span class="p">(</span><span class="n">label_vec</span><span class="p">,</span> <span class="n">custom_handles</span><span class="p">)</span>
+            <span class="c1">#ax.legend(handles=custom_handles)</span>
+            <span class="n">box</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_position</span><span class="p">([</span><span class="n">box</span><span class="o">.</span><span class="n">x0</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">y0</span> <span class="o">+</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">,</span>
+                 <span class="n">box</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.85</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="n">custom_handles</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span>
+                <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.25</span><span class="p">),</span>
+                <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shadow</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">ncol</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;time_series&quot;</span><span class="p">][</span><span class="s2">&quot;legend_n_columns&quot;</span><span class="p">])</span>
+
+
+
+
+    <span class="k">elif</span> <span class="n">colorby</span> <span class="o">==</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span>
+        <span class="c1"># subset obs to plot</span>
+        <span class="n">line_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ok&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">show_outliers</span><span class="p">:</span>
+            <span class="n">line_labels</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">qc_labels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">show_filled</span><span class="p">:</span>
+            <span class="n">line_labels</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fill_labels</span><span class="p">)</span>
+
+        <span class="c1"># all lines are solid lines</span>
+        <span class="n">line_style_mapper</span> <span class="o">=</span> <span class="p">{</span><span class="n">lab</span><span class="p">:</span> <span class="s1">&#39;-&#39;</span> <span class="k">for</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">line_labels</span><span class="p">}</span>
+
+        <span class="c1"># create color mapper if none is given</span>
+        <span class="k">if</span> <span class="n">colorby_name_colordict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">col_mapper</span> <span class="o">=</span> <span class="n">make_cat_colormapper</span><span class="p">(</span><span class="n">mergedf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span>
+                                              <span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;time_series&#39;</span><span class="p">][</span><span class="s1">&#39;colormap&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">col_mapper</span> <span class="o">=</span> <span class="n">colorby_name_colordict</span>
+
+
+        <span class="c1"># iterate over station and make line collection to avoid interpolation</span>
+        <span class="k">for</span> <span class="n">sta</span> <span class="ow">in</span> <span class="n">mergedf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+            <span class="n">stadf</span> <span class="o">=</span> <span class="n">xs_save</span><span class="p">(</span><span class="n">mergedf</span><span class="p">,</span> <span class="n">sta</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="c1">#subset to one station</span>
+            <span class="n">linedf</span> <span class="o">=</span> <span class="n">stadf</span><span class="p">[</span><span class="n">stadf</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">line_labels</span><span class="p">)]</span> <span class="c1">#subset all obs that are repr by lines</span>
+
+            <span class="c1"># now add the other records, and convert the value to nan to avoid</span>
+            <span class="c1"># interpolation in the plot</span>
+            <span class="n">stadf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">stadf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">linedf</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+            <span class="c1"># make line collection</span>
+            <span class="n">sta_line_lc</span> <span class="o">=</span> <span class="n">_create_linecollection</span><span class="p">(</span>
+                                <span class="n">linedf</span> <span class="o">=</span> <span class="n">stadf</span><span class="p">,</span>
+                                <span class="n">colormapper</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                <span class="n">const_color</span> <span class="o">=</span> <span class="n">col_mapper</span><span class="p">[</span><span class="n">sta</span><span class="p">],</span>
+                                <span class="n">linestylemapper</span><span class="o">=</span><span class="n">line_style_mapper</span><span class="p">,</span>
+                                <span class="n">plotsettings</span> <span class="o">=</span><span class="n">plot_settings</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">sta_line_lc</span><span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="n">show_legend</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="c1"># create a legend item for each station</span>
+            <span class="n">custom_handles</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1">#add legend items to it</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="n">mergedf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+            <span class="c1"># sort legend items alphabetically</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">sta</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                <span class="n">custom_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">col_mapper</span><span class="p">[</span><span class="n">sta</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">sta</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+
+            <span class="n">box</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_position</span><span class="p">([</span><span class="n">box</span><span class="o">.</span><span class="n">x0</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">y0</span> <span class="o">+</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">,</span>
+                 <span class="n">box</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.88</span><span class="p">])</span>
+            <span class="n">primary_legend</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="n">custom_handles</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span>
+                                        <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">),</span>
+                                        <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shadow</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                        <span class="n">ncol</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;time_series&quot;</span><span class="p">][</span><span class="s2">&quot;legend_n_columns&quot;</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">primary_legend</span><span class="p">)</span>
+
+    <span class="c1"># Set title</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+    <span class="c1"># datetime formatter</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">_format_datetime_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+    <span class="c1"># Set x and y labels</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">)</span>
+
+    <span class="c1"># set x,y limits</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">mdates</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">dt_min</span><span class="p">),</span> <span class="n">mdates</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">dt_max</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">autoscale</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ax</span><span class="p">,</span> <span class="n">col_mapper</span></div>
+
+
+
+<div class="viewcode-block" id="model_timeseries_plot"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.plotting_functions.model_timeseries_plot.html#metobs_toolkit.plotting_functions.model_timeseries_plot">[docs]</a><span class="k">def</span> <span class="nf">model_timeseries_plot</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">,</span>
+    <span class="n">obstype</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="p">,</span>
+    <span class="n">settings</span><span class="p">,</span>
+    <span class="n">show_primary_legend</span><span class="p">,</span>
+    <span class="n">add_second_legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">_ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="c1">#needed for GUI, not recommended use</span>
+    <span class="n">colorby_name_colordict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="n">plot_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">app</span><span class="p">[</span><span class="s2">&quot;plot_settings&quot;</span><span class="p">]</span>
+
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_ax</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)):</span>
+        <span class="c1"># init figure</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;time_series&quot;</span><span class="p">][</span><span class="s2">&quot;figsize&quot;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">_ax</span>
+
+    <span class="c1"># get data ready</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="o">~</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()]</span>
+
+
+    <span class="c1"># rename and create dummy columns so that linecollection can be used</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">obstype</span><span class="p">:</span> <span class="s1">&#39;value&#39;</span><span class="p">})</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;modeldata&#39;</span>
+
+
+    <span class="c1"># all lines are dashed lines</span>
+    <span class="n">line_style_mapper</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;modeldata&#39;</span><span class="p">:</span> <span class="s1">&#39;--&#39;</span> <span class="p">}</span>
+
+    <span class="c1"># create color mapper if none is given</span>
+    <span class="k">if</span> <span class="n">colorby_name_colordict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">col_mapper</span> <span class="o">=</span> <span class="n">make_cat_colormapper</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span>
+                                          <span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;time_series&#39;</span><span class="p">][</span><span class="s1">&#39;colormap&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">col_mapper</span> <span class="o">=</span> <span class="n">colorby_name_colordict</span>
+
+
+    <span class="c1"># iterate over station and make line collection to avoid interpolation</span>
+    <span class="k">for</span> <span class="n">sta</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+        <span class="n">stadf</span> <span class="o">=</span> <span class="n">xs_save</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">sta</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="c1">#subset to one station</span>
+
+        <span class="c1"># make line collection</span>
+        <span class="n">sta_line_lc</span> <span class="o">=</span> <span class="n">_create_linecollection</span><span class="p">(</span>
+                            <span class="n">linedf</span> <span class="o">=</span> <span class="n">stadf</span><span class="p">,</span>
+                            <span class="n">colormapper</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="n">const_color</span> <span class="o">=</span> <span class="n">col_mapper</span><span class="p">[</span><span class="n">sta</span><span class="p">],</span>
+                            <span class="n">linestylemapper</span><span class="o">=</span><span class="n">line_style_mapper</span><span class="p">,</span>
+                            <span class="n">plotsettings</span> <span class="o">=</span><span class="n">plot_settings</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">sta_line_lc</span><span class="p">)</span>
+
+
+
+    <span class="k">if</span> <span class="n">show_primary_legend</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="c1"># create a legend item for each station</span>
+        <span class="n">custom_handles</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1">#add legend items to it</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+        <span class="c1"># sort legend items alphabetically</span>
+        <span class="n">names</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">sta</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">custom_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">col_mapper</span><span class="p">[</span><span class="n">sta</span><span class="p">],</span>
+                           <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;modeldata at </span><span class="si">{</span><span class="n">sta</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+
+        <span class="n">box</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_position</span><span class="p">([</span><span class="n">box</span><span class="o">.</span><span class="n">x0</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">y0</span> <span class="o">+</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">,</span>
+             <span class="n">box</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.88</span><span class="p">])</span>
+        <span class="n">primary_legend</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="n">custom_handles</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span>
+            <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">),</span>
+            <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shadow</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">ncol</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;time_series&quot;</span><span class="p">][</span><span class="s2">&quot;legend_n_columns&quot;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">primary_legend</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">add_second_legend</span><span class="p">:</span>
+        <span class="n">line_solid</span> <span class="o">=</span> <span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+        <span class="n">line_dashed</span> <span class="o">=</span> <span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;observations&#39;</span><span class="p">)</span>
+        <span class="n">secondary_legend</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="p">[</span><span class="n">line_solid</span><span class="p">,</span> <span class="n">line_dashed</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">secondary_legend</span><span class="p">)</span>
+
+    <span class="c1"># Set title</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+    <span class="c1"># datetime formatter</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">_format_datetime_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+    <span class="c1"># Set x and y labels</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">)</span>
+
+    <span class="c1"># set x lim</span>
+    <span class="c1"># ax.set_xlim(left=dt_min, right=dt_max)</span>
+    <span class="c1"># ax.set_ylim(bottom=y_min, top=y_max)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">autoscale</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">ax</span><span class="p">,</span> <span class="n">col_mapper</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="diurnal_plot"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.plotting_functions.diurnal_plot.html#metobs_toolkit.plotting_functions.diurnal_plot">[docs]</a><span class="k">def</span> <span class="nf">diurnal_plot</span><span class="p">(</span><span class="n">diurnaldf</span><span class="p">,</span> <span class="n">errorbandsdf</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">tzstr</span><span class="p">,</span> <span class="n">plot_settings</span><span class="p">,</span>
+                 <span class="n">colorby</span><span class="p">,</span> <span class="n">lcz_dict</span><span class="p">,</span> <span class="n">data_template</span><span class="p">,</span> <span class="n">obstype</span><span class="p">,</span> <span class="n">y_label</span><span class="p">,</span>
+                 <span class="n">legend</span><span class="p">,</span> <span class="n">show_zero_horizontal</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="c1"># init figure</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;figsize&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">colorby</span> <span class="o">==</span> <span class="s1">&#39;lcz&#39;</span><span class="p">:</span>
+        <span class="n">present_lczs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">lcz_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+        <span class="c1"># select colormap</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">present_lczs</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;n_cat_max&#39;</span><span class="p">]:</span>
+            <span class="n">cmap</span> <span class="o">=</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;cmap_categorical&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cmap</span> <span class="o">=</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;cmap_continious&#39;</span><span class="p">]</span>
+
+        <span class="n">colordict</span> <span class="o">=</span> <span class="n">make_cat_colormapper</span><span class="p">(</span><span class="n">catlist</span><span class="o">=</span><span class="n">present_lczs</span><span class="p">,</span>
+                                         <span class="n">cmapname</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+
+
+        <span class="c1"># Make plot per lcz</span>
+        <span class="n">custom_handles</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">lcz_cat</span>  <span class="ow">in</span> <span class="n">present_lczs</span><span class="p">:</span>
+            <span class="n">stations</span> <span class="o">=</span> <span class="p">[</span><span class="n">sta</span> <span class="k">for</span> <span class="n">sta</span> <span class="ow">in</span> <span class="n">diurnaldf</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">lcz_dict</span><span class="p">[</span><span class="n">sta</span><span class="p">]</span> <span class="o">==</span> <span class="n">lcz_cat</span><span class="p">]</span>
+            <span class="n">diurnaldf</span><span class="p">[</span><span class="n">stations</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colordict</span><span class="p">[</span><span class="n">lcz_cat</span><span class="p">],</span> <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="c1"># add legend item</span>
+            <span class="n">custom_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">colordict</span><span class="p">[</span><span class="n">lcz_cat</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">lcz_cat</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">legend</span><span class="p">:</span>
+            <span class="n">box</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_position</span><span class="p">([</span><span class="n">box</span><span class="o">.</span><span class="n">x0</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">y0</span> <span class="o">+</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">,</span>
+                 <span class="n">box</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.95</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="n">custom_handles</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span>
+                <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">),</span>
+                <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shadow</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">ncol</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;legend_n_columns&quot;</span><span class="p">])</span>
+
+
+
+
+    <span class="k">if</span> <span class="n">colorby</span> <span class="o">==</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span>
+        <span class="c1"># which colormap to use:</span>
+        <span class="k">if</span> <span class="n">diurnaldf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;n_cat_max&#39;</span><span class="p">]:</span>
+            <span class="n">cmap</span> <span class="o">=</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;cmap_categorical&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cmap</span> <span class="o">=</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;cmap_continious&#39;</span><span class="p">]</span>
+
+        <span class="n">diurnaldf</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">legend</span><span class="p">:</span>
+            <span class="n">box</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_position</span><span class="p">([</span><span class="n">box</span><span class="o">.</span><span class="n">x0</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">y0</span> <span class="o">+</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">,</span>
+                     <span class="n">box</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.88</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">diurnaldf</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span>
+                    <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">),</span>
+                    <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shadow</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">ncol</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;legend_n_columns&quot;</span><span class="p">])</span>
+
+
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">errorbandsdf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Extract colorscheme from the plot</span>
+        <span class="n">col_sheme</span> <span class="o">=</span> <span class="p">{</span><span class="n">line</span><span class="o">.</span><span class="n">get_label</span><span class="p">():</span> <span class="n">line</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_lines</span><span class="p">()}</span>
+
+        <span class="k">for</span> <span class="n">sta</span> <span class="ow">in</span> <span class="n">errorbandsdf</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">errorbandsdf</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                             <span class="n">diurnaldf</span><span class="p">[</span><span class="n">sta</span><span class="p">]</span> <span class="o">-</span> <span class="n">errorbandsdf</span><span class="p">[</span><span class="n">sta</span><span class="p">],</span>
+                             <span class="n">diurnaldf</span><span class="p">[</span><span class="n">sta</span><span class="p">]</span> <span class="o">+</span> <span class="n">errorbandsdf</span><span class="p">[</span><span class="n">sta</span><span class="p">],</span>
+                             <span class="n">alpha</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s1">&#39;alpha_error_bands&#39;</span><span class="p">],</span>
+                             <span class="n">color</span><span class="o">=</span><span class="n">col_sheme</span><span class="p">[</span><span class="n">sta</span><span class="p">],</span>
+                             <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">show_zero_horizontal</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+    <span class="c1"># Styling attributes</span>
+
+    <span class="c1"># y-label</span>
+    <span class="k">if</span> <span class="n">y_label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">templ_map</span> <span class="o">=</span> <span class="n">map_obstype</span><span class="p">(</span><span class="n">obstype</span><span class="p">,</span> <span class="n">data_template</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">y_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">templ_map</span><span class="p">[</span><span class="s2">&quot;orig_name&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">templ_map</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">) </span><span class="se">\n</span><span class="s1"> </span><span class="si">{</span><span class="n">templ_map</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">y_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">templ_map</span><span class="p">[</span><span class="s2">&quot;orig_name&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">y_label</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{x:.0f}</span><span class="s1"> h&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Hours (timezone: </span><span class="si">{</span><span class="n">tzstr</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="heatmap_plot"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.plotting_functions.heatmap_plot.html#metobs_toolkit.plotting_functions.heatmap_plot">[docs]</a><span class="k">def</span> <span class="nf">heatmap_plot</span><span class="p">(</span><span class="n">cor_dict</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">heatmap_settings</span><span class="p">):</span>
+
+    <span class="c1"># make heatmap of cor</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span> <span class="n">heatmap_settings</span><span class="p">[</span><span class="s1">&#39;figsize&#39;</span><span class="p">])</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cor_dict</span><span class="p">[</span><span class="s1">&#39;cor matrix&#39;</span><span class="p">],</span>
+                   <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span>
+                   <span class="n">vmin</span><span class="o">=</span> <span class="n">heatmap_settings</span><span class="p">[</span><span class="s1">&#39;vmin&#39;</span><span class="p">],</span>
+                   <span class="n">vmax</span><span class="o">=</span> <span class="n">heatmap_settings</span><span class="p">[</span><span class="s1">&#39;vmax&#39;</span><span class="p">],</span>
+                   <span class="n">cmap</span><span class="o">=</span> <span class="n">heatmap_settings</span><span class="p">[</span><span class="s1">&#39;cmap&#39;</span><span class="p">])</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">,</span> <span class="n">fraction</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">)</span>
+
+
+
+    <span class="c1"># Loop over data dimensions and create text annotations</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cor_dict</span><span class="p">[</span><span class="s1">&#39;cor matrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cor_dict</span><span class="p">[</span><span class="s1">&#39;cor matrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">)):</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span>
+                           <span class="n">cor_dict</span><span class="p">[</span><span class="s2">&quot;combined matrix&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span>
+                            <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+                           <span class="p">)</span>
+
+    <span class="c1"># styling</span>
+    <span class="c1"># Show all ticks and label them with the dataframe column name</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">ticks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">cor_dict</span><span class="p">[</span><span class="s1">&#39;cor matrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+                  <span class="n">labels</span><span class="o">=</span><span class="n">cor_dict</span><span class="p">[</span><span class="s1">&#39;cor matrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span>
+                  <span class="n">rotation</span><span class="o">=</span><span class="n">heatmap_settings</span><span class="p">[</span><span class="s1">&#39;x_tick_rot&#39;</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">ticks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">cor_dict</span><span class="p">[</span><span class="s1">&#39;cor matrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
+                  <span class="n">labels</span><span class="o">=</span><span class="n">cor_dict</span><span class="p">[</span><span class="s1">&#39;cor matrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span>
+                  <span class="n">rotation</span> <span class="o">=</span> <span class="n">heatmap_settings</span><span class="p">[</span><span class="s1">&#39;y_tick_rot&#39;</span><span class="p">])</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="correlation_scatter"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.plotting_functions.correlation_scatter.html#metobs_toolkit.plotting_functions.correlation_scatter">[docs]</a><span class="k">def</span> <span class="nf">correlation_scatter</span><span class="p">(</span><span class="n">full_cor_dict</span><span class="p">,</span> <span class="n">groupby_labels</span><span class="p">,</span> <span class="n">obstypes</span><span class="p">,</span><span class="n">title</span><span class="p">,</span> <span class="n">cor_scatter_settings</span><span class="p">):</span>
+
+
+    <span class="c1"># combine all correlation matrices to one with multiindex</span>
+    <span class="n">comb_cor_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+    <span class="n">comb_p_df</span> <span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">subcordict</span> <span class="ow">in</span> <span class="n">full_cor_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+        <span class="c1"># if mulitple groupby are given, key is tuple --&gt; conv to string</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="c1"># corelations</span>
+        <span class="n">subdf_cor</span> <span class="o">=</span> <span class="n">subcordict</span><span class="p">[</span><span class="s1">&#39;cor matrix&#39;</span><span class="p">]</span>
+        <span class="c1"># make multi index df</span>
+        <span class="n">subdf_cor</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="n">subdf_cor</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;categories&#39;</span>
+        <span class="n">subdf_cor</span> <span class="o">=</span> <span class="n">subdf_cor</span><span class="p">[</span><span class="n">subdf_cor</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">obstypes</span><span class="p">)]</span>
+        <span class="n">subdf_cor</span> <span class="o">=</span> <span class="n">subdf_cor</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;group&#39;</span><span class="p">,</span> <span class="s1">&#39;categories&#39;</span><span class="p">])</span>
+        <span class="n">comb_cor_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">comb_cor_df</span><span class="p">,</span> <span class="n">subdf_cor</span><span class="p">])</span>
+
+        <span class="c1"># p values</span>
+        <span class="n">subdf_p</span> <span class="o">=</span> <span class="n">subcordict</span><span class="p">[</span><span class="s1">&#39;significance matrix&#39;</span><span class="p">]</span>
+        <span class="c1"># make multi index df</span>
+        <span class="n">subdf_p</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="n">subdf_p</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;categories&#39;</span>
+        <span class="n">subdf_p</span> <span class="o">=</span> <span class="n">subdf_p</span><span class="p">[</span><span class="n">subdf_p</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">obstypes</span><span class="p">)]</span>
+        <span class="n">subdf_p</span> <span class="o">=</span> <span class="n">subdf_p</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;group&#39;</span><span class="p">,</span> <span class="s1">&#39;categories&#39;</span><span class="p">])</span>
+        <span class="n">comb_p_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">comb_p_df</span><span class="p">,</span> <span class="n">subdf_p</span><span class="p">])</span>
+
+
+    <span class="c1"># create plotdf structure</span>
+    <span class="n">plot_cor_df</span> <span class="o">=</span> <span class="n">comb_cor_df</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
+    <span class="n">plot_cor_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> - </span><span class="si">{</span><span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">plot_cor_df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+    <span class="n">plot_p_df</span> <span class="o">=</span> <span class="n">comb_p_df</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
+    <span class="n">plot_p_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> - </span><span class="si">{</span><span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">plot_p_df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+
+
+
+    <span class="c1"># Get columns without variation (these will not be plotted)</span>
+    <span class="n">const_cols</span> <span class="o">=</span> <span class="n">plot_cor_df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="n">plot_cor_df</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; The following correlations are constant for all groups and will not be included in the plot: </span><span class="si">{</span><span class="n">const_cols</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+    <span class="c1"># Subset to the columns that has to be plotted</span>
+    <span class="n">plot_cor_df</span> <span class="o">=</span> <span class="n">plot_cor_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">const_cols</span><span class="p">)</span>
+    <span class="n">plot_p_df</span> <span class="o">=</span> <span class="n">plot_p_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">const_cols</span><span class="p">)</span>
+
+
+    <span class="c1"># make a colormap for the left over correlations</span>
+    <span class="n">col_mapper</span> <span class="o">=</span> <span class="n">make_cat_colormapper</span><span class="p">(</span><span class="n">catlist</span><span class="o">=</span><span class="n">plot_cor_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span>
+                                      <span class="n">cmapname</span><span class="o">=</span><span class="n">cor_scatter_settings</span><span class="p">[</span><span class="s1">&#39;cmap&#39;</span><span class="p">])</span>
+
+
+
+    <span class="c1"># make figure</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">cor_scatter_settings</span><span class="p">[</span><span class="s1">&#39;figsize&#39;</span><span class="p">])</span>
+
+    <span class="c1"># add the zero line</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Define p value bins</span>
+    <span class="n">p_bins</span> <span class="o">=</span> <span class="n">cor_scatter_settings</span><span class="p">[</span><span class="s1">&#39;p_bins&#39;</span><span class="p">]</span> <span class="c1">#[0, .001, 0.01, 0.05, 999]</span>
+    <span class="n">bins_markers</span> <span class="o">=</span><span class="n">cor_scatter_settings</span><span class="p">[</span><span class="s1">&#39;bins_markers&#39;</span><span class="p">]</span> <span class="c1">#[&#39;*&#39;, &#39;s&#39;, &#39;^&#39;, &#39;x&#39;]</span>
+
+
+
+    <span class="c1"># # iterate over the different corelations to plot</span>
+    <span class="n">custom_handles</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">cor_name</span> <span class="ow">in</span> <span class="n">plot_cor_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">to_scatter</span> <span class="o">=</span> <span class="n">plot_cor_df</span><span class="p">[[</span><span class="n">cor_name</span><span class="p">]]</span>
+
+        <span class="c1"># convert p values to markers</span>
+        <span class="n">to_scatter</span><span class="p">[</span><span class="s1">&#39;p-value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plot_p_df</span><span class="p">[</span><span class="n">cor_name</span><span class="p">]</span>
+        <span class="n">to_scatter</span><span class="p">[</span><span class="s1">&#39;markers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">to_scatter</span><span class="p">[</span><span class="s1">&#39;p-value&#39;</span><span class="p">],</span>
+                                        <span class="n">bins</span><span class="o">=</span><span class="n">p_bins</span><span class="p">,</span>
+                                        <span class="n">labels</span><span class="o">=</span> <span class="n">bins_markers</span><span class="p">)</span>
+        <span class="n">to_scatter</span> <span class="o">=</span> <span class="n">to_scatter</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+        <span class="c1"># plot per scatter group</span>
+        <span class="n">scatter_groups</span> <span class="o">=</span> <span class="n">to_scatter</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;markers&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">marker</span><span class="p">,</span> <span class="n">markergroup</span> <span class="ow">in</span> <span class="n">scatter_groups</span><span class="p">:</span>
+            <span class="n">markergroup</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;group&#39;</span><span class="p">,</span>
+                            <span class="n">y</span><span class="o">=</span><span class="n">cor_name</span><span class="p">,</span>
+                            <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;scatter&#39;</span><span class="p">,</span>
+                            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+                            <span class="n">s</span><span class="o">=</span><span class="n">cor_scatter_settings</span><span class="p">[</span><span class="s1">&#39;scatter_size&#39;</span><span class="p">],</span>
+                            <span class="n">edgecolors</span><span class="o">=</span><span class="n">cor_scatter_settings</span><span class="p">[</span><span class="s1">&#39;scatter_edge_col&#39;</span><span class="p">],</span>
+                            <span class="n">linewidth</span><span class="o">=</span><span class="n">cor_scatter_settings</span><span class="p">[</span><span class="s1">&#39;scatter_edge_line_width&#39;</span><span class="p">],</span>
+                            <span class="n">color</span><span class="o">=</span><span class="n">col_mapper</span><span class="p">[</span><span class="n">cor_name</span><span class="p">],</span>
+                            <span class="n">marker</span><span class="o">=</span><span class="n">marker</span><span class="p">,</span>
+                            <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="n">cor_scatter_settings</span><span class="p">[</span><span class="s1">&#39;ymin&#39;</span><span class="p">],</span>
+                                  <span class="n">cor_scatter_settings</span><span class="p">[</span><span class="s1">&#39;ymax&#39;</span><span class="p">]))</span>
+
+        <span class="c1"># add legend handl for the colors</span>
+
+
+
+        <span class="n">custom_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                      <span class="n">color</span><span class="o">=</span><span class="n">col_mapper</span><span class="p">[</span><span class="n">cor_name</span><span class="p">],</span>
+                                      <span class="n">label</span><span class="o">=</span><span class="n">cor_name</span><span class="p">,</span>
+                                      <span class="n">lw</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+
+    <span class="c1"># add legend handl for the scatter types</span>
+    <span class="n">marker_def</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">p_bins</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">bins_markers</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">p_edge</span><span class="p">,</span><span class="n">mark</span> <span class="ow">in</span> <span class="n">marker_def</span><span class="p">:</span>
+        <span class="n">custom_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="n">marker</span><span class="o">=</span><span class="n">mark</span><span class="p">,</span>
+                        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+                        <span class="n">markerfacecolor</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span>
+                        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;p &lt; </span><span class="si">{</span><span class="n">p_edge</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                        <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+
+
+    <span class="c1"># format legend</span>
+    <span class="n">box</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_position</span><span class="p">([</span><span class="n">box</span><span class="o">.</span><span class="n">x0</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">y0</span> <span class="o">+</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">,</span>
+          <span class="n">box</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="mf">0.85</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="n">custom_handles</span><span class="p">,</span>
+              <span class="c1"># loc=&#39;upper center&#39;,</span>
+              <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">),</span>
+              <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shadow</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">prop</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="n">cor_scatter_settings</span><span class="p">[</span><span class="s1">&#39;legend_text_size&#39;</span><span class="p">]},</span>
+              <span class="n">ncol</span><span class="o">=</span><span class="n">cor_scatter_settings</span><span class="p">[</span><span class="s1">&#39;legend_ncols&#39;</span><span class="p">],</span>
+              <span class="p">)</span>
+
+
+    <span class="c1"># styling attributes</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Pearson correlation&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Groups of </span><span class="si">{</span><span class="n">groupby_labels</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+
+
+
+
+<span class="k">def</span> <span class="nf">_make_pie_from_freqs</span><span class="p">(</span>
+    <span class="n">freq_dict</span><span class="p">,</span> <span class="n">colormapper</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">plot_settings</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">10</span>
+<span class="p">):</span>
+    <span class="c1"># To dataframe</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">freq_dict</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;freq&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+
+    <span class="c1"># make color mapper</span>
+    <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">colormapper</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;freq&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No occurences in sample.&quot;</span><span class="p">)</span>
+        <span class="c1"># add a 100% no occurences to it, so it can be plotted</span>
+        <span class="n">no_oc_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;No occurences&quot;</span><span class="p">],</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;freq&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">100.0</span><span class="p">],</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;color_mapper&quot;</span><span class="p">][</span><span class="s2">&quot;ok&quot;</span><span class="p">]]},</span>
+        <span class="p">)</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">stats</span><span class="p">,</span> <span class="n">no_oc_df</span><span class="p">])</span>
+
+    <span class="c1"># Remove zero occurence labels (they clutter up the lables in the pies)</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># Make pie</span>
+    <span class="n">patches</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">pie</span><span class="p">(</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;freq&quot;</span><span class="p">],</span>
+        <span class="n">colors</span><span class="o">=</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">],</span>
+        <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">l</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">s</span><span class="si">:</span><span class="s2">0.1f</span><span class="si">}</span><span class="s2">%&quot;</span>
+            <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;freq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_list</span><span class="p">())</span>
+        <span class="p">],</span>
+        <span class="n">textprops</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fontsize&quot;</span><span class="p">:</span> <span class="n">labelsize</span><span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ax</span>
+
+
+<span class="k">def</span> <span class="nf">_outl_value_to_colormapper</span><span class="p">(</span><span class="n">plot_settings</span><span class="p">,</span> <span class="n">qc_check_info</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make color mapper for the outlier LABELVALUES to colors.&quot;&quot;&quot;</span>
+    <span class="n">color_defenitions</span> <span class="o">=</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;color_mapper&quot;</span><span class="p">]</span>
+    <span class="n">outl_name_mapper</span> <span class="o">=</span> <span class="p">{</span><span class="n">val</span><span class="p">[</span><span class="s2">&quot;outlier_flag&quot;</span><span class="p">]:</span> <span class="n">key</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">qc_check_info</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">outl_col_mapper</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">outl_type</span><span class="p">:</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="n">outl_name_mapper</span><span class="p">[</span><span class="n">outl_type</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">outl_type</span> <span class="ow">in</span> <span class="n">outl_name_mapper</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">outl_col_mapper</span>
+
+
+<span class="k">def</span> <span class="nf">_all_possible_labels_colormapper</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make color mapper for all LABELVALUES to colors.&quot;&quot;&quot;</span>
+
+
+    <span class="n">plot_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">app</span><span class="p">[</span><span class="s2">&quot;plot_settings&quot;</span><span class="p">]</span>
+    <span class="n">gap_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">gap</span>
+    <span class="n">qc_info_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">qc</span><span class="p">[</span><span class="s2">&quot;qc_checks_info&quot;</span><span class="p">]</span>
+    <span class="n">missing_obs_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">missing_obs</span><span class="p">[</span><span class="s1">&#39;missing_obs_fill_info&#39;</span><span class="p">]</span>
+
+
+    <span class="n">color_defenitions</span> <span class="o">=</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;color_mapper&quot;</span><span class="p">]</span>
+
+    <span class="n">mapper</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="c1"># get QC outlier labels</span>
+
+    <span class="n">outl_col_mapper</span> <span class="o">=</span> <span class="n">_outl_value_to_colormapper</span><span class="p">(</span>
+        <span class="n">plot_settings</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">,</span> <span class="n">qc_check_info</span><span class="o">=</span><span class="n">qc_info_settings</span>
+    <span class="p">)</span>
+    <span class="n">mapper</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">outl_col_mapper</span><span class="p">)</span>
+
+
+
+    <span class="c1"># get &#39;ok&#39; and &#39;not checked&#39;</span>
+    <span class="n">mapper</span><span class="p">[</span><span class="s2">&quot;ok&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;ok&quot;</span><span class="p">]</span>
+    <span class="n">mapper</span><span class="p">[</span><span class="s2">&quot;not checked&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;not checked&quot;</span><span class="p">]</span>
+
+    <span class="c1"># update gap and missing timestamp labels</span>
+    <span class="n">mapper</span><span class="p">[</span><span class="n">gap_settings</span><span class="p">[</span><span class="s2">&quot;gaps_info&quot;</span><span class="p">][</span><span class="s2">&quot;gap&quot;</span><span class="p">][</span><span class="s2">&quot;outlier_flag&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;gap&quot;</span><span class="p">]</span>
+    <span class="n">mapper</span><span class="p">[</span>
+        <span class="n">gap_settings</span><span class="p">[</span><span class="s2">&quot;gaps_info&quot;</span><span class="p">][</span><span class="s2">&quot;missing_timestamp&quot;</span><span class="p">][</span><span class="s2">&quot;outlier_flag&quot;</span><span class="p">]</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;missing_timestamp&quot;</span><span class="p">]</span>
+
+    <span class="c1"># add fill for gaps</span>
+    <span class="k">for</span> <span class="n">method</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">gap_settings</span><span class="p">[</span><span class="s2">&quot;gaps_fill_info&quot;</span><span class="p">][</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">mapper</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="n">method</span><span class="p">]</span>
+
+    <span class="c1"># add fill for missing</span>
+    <span class="k">for</span> <span class="n">method</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">missing_obs_settings</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">mapper</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="n">method</span><span class="p">]</span>
+
+
+
+
+
+    <span class="k">return</span> <span class="n">mapper</span>
+
+
+<div class="viewcode-block" id="qc_stats_pie"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.plotting_functions.qc_stats_pie.html#metobs_toolkit.plotting_functions.qc_stats_pie">[docs]</a><span class="k">def</span> <span class="nf">qc_stats_pie</span><span class="p">(</span><span class="n">final_stats</span><span class="p">,</span> <span class="n">outlier_stats</span><span class="p">,</span> <span class="n">specific_stats</span><span class="p">,</span> <span class="n">plot_settings</span><span class="p">,</span>
+                 <span class="n">qc_check_info</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+    <span class="c1"># restore rcParams</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">rcParamsDefault</span>
+
+    <span class="c1"># Specify rcParams</span>
+
+    <span class="c1"># axestitl</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;axes.titlelocation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;center&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;axes.titlesize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;axes.titleweight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;axes.titlecolor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+
+    <span class="c1"># label size</span>
+    <span class="n">textsize_big_pies</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">textsize_small_pies</span> <span class="o">=</span> <span class="mi">7</span>
+
+    <span class="n">color_defenitions</span> <span class="o">=</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;color_mapper&quot;</span><span class="p">]</span>
+    <span class="c1"># Define layout</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;pie_charts&quot;</span><span class="p">][</span><span class="s2">&quot;figsize&quot;</span><span class="p">])</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_gridspec</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="n">ax_thl</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">spec</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># top half left</span>
+    <span class="n">ax_thr</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">spec</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">:])</span>  <span class="c1"># top half right</span>
+
+    <span class="c1"># 1. Make the finale label pieplot</span>
+    <span class="c1"># make color mapper</span>
+    <span class="n">final_col_mapper</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;ok&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;QC outliers&quot;</span><span class="p">:</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;outlier&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;missing (gaps)&quot;</span><span class="p">:</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;gap&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;missing (individual)&quot;</span><span class="p">:</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;missing_timestamp&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="n">_make_pie_from_freqs</span><span class="p">(</span>
+        <span class="n">freq_dict</span><span class="o">=</span><span class="n">final_stats</span><span class="p">,</span>
+        <span class="n">colormapper</span><span class="o">=</span><span class="n">final_col_mapper</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax_thl</span><span class="p">,</span>
+        <span class="n">plot_settings</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">,</span>
+        <span class="n">radius</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;pie_charts&quot;</span><span class="p">][</span><span class="s2">&quot;radius_big&quot;</span><span class="p">],</span>
+        <span class="n">labelsize</span><span class="o">=</span><span class="n">textsize_big_pies</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ax_thl</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Final label frequencies&quot;</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="p">(</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;pie_charts&quot;</span><span class="p">][</span><span class="s2">&quot;radius_big&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.4</span><span class="p">,</span>
+        <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># 2. Make QC overview pie</span>
+    <span class="c1"># make color mapper</span>
+    <span class="n">outl_col_mapper</span> <span class="o">=</span> <span class="n">_outl_value_to_colormapper</span><span class="p">(</span><span class="n">plot_settings</span><span class="p">,</span> <span class="n">qc_check_info</span><span class="p">)</span>
+
+    <span class="n">_make_pie_from_freqs</span><span class="p">(</span>
+        <span class="n">freq_dict</span><span class="o">=</span><span class="n">outlier_stats</span><span class="p">,</span>
+        <span class="n">colormapper</span><span class="o">=</span><span class="n">outl_col_mapper</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax_thr</span><span class="p">,</span>
+        <span class="n">plot_settings</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">,</span>
+        <span class="n">radius</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;pie_charts&quot;</span><span class="p">][</span><span class="s2">&quot;radius_big&quot;</span><span class="p">],</span>
+        <span class="n">labelsize</span><span class="o">=</span><span class="n">textsize_big_pies</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ax_thr</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Outlier performance&quot;</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="p">(</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;pie_charts&quot;</span><span class="p">][</span><span class="s2">&quot;radius_big&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.4</span><span class="p">,</span>
+        <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># 3. Make a specific pie for each indvidual QC + gap + missing</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;axes.titley&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;pie_charts&quot;</span><span class="p">][</span><span class="s2">&quot;radius_small&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="c1"># make color mapper</span>
+    <span class="n">spec_col_mapper</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;ok&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;not checked&quot;</span><span class="p">:</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;not checked&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;outlier&quot;</span><span class="p">:</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;outlier&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;gap&quot;</span><span class="p">:</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;gap&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;missing timestamp&quot;</span><span class="p">:</span> <span class="n">color_defenitions</span><span class="p">[</span><span class="s2">&quot;missing_timestamp&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="n">specific_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">specific_stats</span><span class="p">)</span>
+
+    <span class="n">ncol</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">nrow</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="c1"># create list of axes for the small pies</span>
+    <span class="n">axlist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">checkname</span> <span class="ow">in</span> <span class="n">specific_stats</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span>
+            <span class="n">spec</span><span class="p">[</span>
+                <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="n">ncol</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="n">ncol</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">i</span> <span class="o">%</span> <span class="n">nrow</span> <span class="p">:</span> <span class="n">i</span> <span class="o">%</span> <span class="n">nrow</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># specific style formatting</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">checkname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">),</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;pie_charts&quot;</span><span class="p">][</span><span class="s2">&quot;radius_small&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># ignore the default pandas title</span>
+
+        <span class="n">axlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+
+    <span class="c1"># Make pie plots</span>
+    <span class="n">specific_df</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">pie</span><span class="p">(</span>
+        <span class="n">subplots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">specific_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+        <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">autopct</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%1.1f%%</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">radius</span><span class="o">=</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;pie_charts&quot;</span><span class="p">][</span><span class="s2">&quot;radius_small&quot;</span><span class="p">],</span>
+        <span class="n">textprops</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fontsize&quot;</span><span class="p">:</span> <span class="n">textsize_small_pies</span><span class="p">},</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">axlist</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="n">spec_col_mapper</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">specific_df</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Specific styling setings per pie</span>
+    <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axlist</span><span class="p">:</span>
+        <span class="c1"># specific style formatting</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># ignore the default pandas title</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span>
+                 <span class="c1"># fontsize=30,</span>
+                 <span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Thomas Vergauwen.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-XXXXXXXXXX', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

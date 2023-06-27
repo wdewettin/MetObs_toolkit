@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>metobs_toolkit.data_import &mdash; metobs_toolkit 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            metobs_toolkit
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../template_mapping.html">Mapping to the toolkit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gee_authentication.html">Using Google Earth Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../special_topics.html">Special topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gui.html">Using the GUI</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetObs_documentation.html">MetObs toolkit Documentation for Users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../MetObs_documentation_full.html">MetObs toolkit Documentation for developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">metobs_toolkit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">metobs_toolkit.data_import</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for metobs_toolkit.data_import</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thu Sep 22 16:24:06 2022</span>
+
+<span class="sd">@author: thoverga</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">import</span> <span class="nn">mysql.connector</span>
+<span class="kn">from</span> <span class="nn">mysql.connector</span> <span class="kn">import</span> <span class="n">errorcode</span>
+<span class="kn">from</span> <span class="nn">metobs_toolkit.df_helpers</span> <span class="kn">import</span> <span class="n">init_multiindexdf</span>
+<span class="kn">from</span> <span class="nn">metobs_toolkit.data_templates.import_templates</span> <span class="kn">import</span> <span class="n">read_csv_template</span>
+
+<span class="kn">from</span> <span class="nn">metobs_toolkit</span> <span class="kn">import</span> <span class="n">observation_types</span>
+
+
+<div class="viewcode-block" id="template_to_package_space"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.data_import.template_to_package_space.html#metobs_toolkit.data_import.template_to_package_space">[docs]</a><span class="k">def</span> <span class="nf">template_to_package_space</span><span class="p">(</span><span class="n">specific_template</span><span class="p">):</span>
+    <span class="n">returndict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">val</span><span class="p">[</span><span class="s2">&quot;varname&quot;</span><span class="p">]:</span> <span class="p">{</span><span class="s2">&quot;orig_name&quot;</span><span class="p">:</span> <span class="n">key</span><span class="p">}</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">specific_template</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">returndict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">orig_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">specific_template</span><span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;orig_name&quot;</span><span class="p">]])</span>
+        <span class="n">orig_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;varname&quot;</span><span class="p">)</span>
+        <span class="n">returndict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">orig_dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">returndict</span></div>
+
+
+<div class="viewcode-block" id="find_compatible_templatefor"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.data_import.find_compatible_templatefor.html#metobs_toolkit.data_import.find_compatible_templatefor">[docs]</a><span class="k">def</span> <span class="nf">find_compatible_templatefor</span><span class="p">(</span><span class="n">df_columns</span><span class="p">,</span> <span class="n">template_list</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">templ</span> <span class="ow">in</span> <span class="n">template_list</span><span class="p">:</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">keys</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">df_columns</span><span class="p">)</span> <span class="k">for</span> <span class="n">keys</span> <span class="ow">in</span> <span class="n">templ</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Compatible template found. &quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">templ</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;No compatible teplate found!&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="compress_dict"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.data_import.compress_dict.html#metobs_toolkit.data_import.compress_dict">[docs]</a><span class="k">def</span> <span class="nf">compress_dict</span><span class="p">(</span><span class="n">nested_dict</span><span class="p">,</span> <span class="n">valuesname</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function unnests a nested dictionary for a specific valuename that is a key in the nested dict.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    nested_dict : dict</span>
+<span class="sd">        Nested dictionary</span>
+
+<span class="sd">    valuesname : str</span>
+<span class="sd">        Nested dict Key-name of nested dict.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    returndict : DICT</span>
+<span class="sd">        A dictionarry where the keys are kept that have the valuesname as a nesteddict key,</span>
+<span class="sd">        and values are the values of the values of the valuesname.</span>
+<span class="sd">        {[key-nested_dict-if-exists]: nested_dict[key-nested_dict-if-exists][valuesname]}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">returndict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">nested_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">valuesname</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+            <span class="n">returndict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="n">valuesname</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">returndict</span></div>
+
+
+<div class="viewcode-block" id="check_template_compatibility"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.data_import.check_template_compatibility.html#metobs_toolkit.data_import.check_template_compatibility">[docs]</a><span class="k">def</span> <span class="nf">check_template_compatibility</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">df_columns</span><span class="p">,</span> <span class="n">filetype</span><span class="p">):</span>
+    <span class="c1"># ignore datetime because this is already mapped</span>
+    <span class="n">present_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df_columns</span> <span class="k">if</span> <span class="n">col</span> <span class="o">!=</span> <span class="s1">&#39;datetime&#39;</span><span class="p">]</span>
+    <span class="n">assumed_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">template</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s1">&#39;datetime&#39;</span><span class="p">]</span>
+
+    <span class="c1"># in mapper but not in df</span>
+    <span class="n">unmapped_assumed</span> <span class="o">=</span> <span class="p">[</span><span class="n">templ_var</span> <span class="k">for</span> <span class="n">templ_var</span> <span class="ow">in</span> <span class="n">assumed_cols</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">templ_var</span> <span class="ow">in</span> <span class="n">present_cols</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unmapped_assumed</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;WARNING! The following columns are not present in the </span><span class="si">{</span><span class="n">filetype</span><span class="si">}</span><span class="s2">,</span><span class="se">\</span>
+<span class="s2"> and cannot be mapped: </span><span class="si">{</span><span class="n">unmapped_assumed</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># in df but not in mapper</span>
+    <span class="n">unmapped_appearing</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">present_cols</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">assumed_cols</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unmapped_appearing</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;WARNING! The following columns in the </span><span class="si">{</span><span class="n">filetype</span><span class="si">}</span><span class="s2"> cannot be mapped with the template: </span><span class="si">{</span><span class="n">unmapped_appearing</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># check if at least one column is mapped</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">present_cols</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">assumed_cols</span><span class="p">)))</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">present_cols</span><span class="p">):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Fatal: The given template: </span><span class="si">{</span><span class="n">assumed_cols</span><span class="si">}</span><span class="s2"> does not match with any of the </span><span class="si">{</span><span class="n">filetype</span><span class="si">}</span><span class="s2"> columns: </span><span class="si">{</span><span class="n">present_cols</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="import_metadata_from_csv"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.data_import.import_metadata_from_csv.html#metobs_toolkit.data_import.import_metadata_from_csv">[docs]</a><span class="k">def</span> <span class="nf">import_metadata_from_csv</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">template_file</span><span class="p">,</span> <span class="n">kwargs_metadata_read</span><span class="p">):</span>
+
+
+    <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)),</span> <span class="s2">&quot;Specify input file in the settings!&quot;</span>
+
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargs_metadata_read</span><span class="p">):</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath_or_buffer</span><span class="o">=</span><span class="n">input_file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_metadata_read</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">common_seperators</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;    &quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">sep</span> <span class="ow">in</span> <span class="n">common_seperators</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">,</span> <span class="s2">&quot;Dataset is empty!&quot;</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Only one column detected from import using these seperators: </span><span class="si">{</span><span class="n">common_seperators</span><span class="si">}</span><span class="s2">. See if csv template is correct.&quot;</span>
+
+    <span class="c1"># validate template</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">read_csv_template</span><span class="p">(</span><span class="n">template_file</span><span class="p">)</span>
+    <span class="n">check_template_compatibility</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="s1">&#39;metadata&#39;</span><span class="p">)</span>
+
+    <span class="c1"># rename columns to toolkit attriute names</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">compress_dict</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="s2">&quot;varname&quot;</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+
+
+<div class="viewcode-block" id="wide_to_long"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.data_import.wide_to_long.html#metobs_toolkit.data_import.wide_to_long">[docs]</a><span class="k">def</span> <span class="nf">wide_to_long</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">obstype</span><span class="p">):</span>
+
+    <span class="c1"># the df is assumed to have one datetime column, and the others represent</span>
+    <span class="c1"># stations with their obstype values</span>
+
+    <span class="n">stationnames</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+    <span class="n">stationnames</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;datetime&#39;</span><span class="p">)</span>
+
+    <span class="n">longdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span>
+        <span class="n">df</span><span class="p">,</span>
+        <span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;datetime&quot;</span><span class="p">],</span>
+        <span class="n">value_vars</span><span class="o">=</span><span class="n">stationnames</span><span class="p">,</span>
+        <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;name&quot;</span><span class="p">,</span>
+        <span class="n">value_name</span><span class="o">=</span><span class="n">obstype</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># # update template</span>
+    <span class="c1"># template[obstype] = template[&quot;_wide_dummy&quot;]</span>
+    <span class="c1"># del template[&quot;_wide_dummy&quot;]</span>
+
+    <span class="c1"># add name to the template</span>
+    <span class="n">template</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;varname&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">longdf</span><span class="p">,</span> <span class="n">template</span></div>
+
+<span class="k">def</span> <span class="nf">_read_csv_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">kwargsdict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; a helper function to read in csv data files, try multiple seperators, and</span>
+<span class="sd">        remove header text. &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargsdict</span><span class="p">):</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath_or_buffer</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargsdict</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">common_seperators</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;    &quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)),</span> <span class="s2">&quot;Specify input file in the settings!&quot;</span>
+            <span class="k">for</span> <span class="n">sep</span> <span class="ow">in</span> <span class="n">common_seperators</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">,</span> <span class="s2">&quot;Dataset is empty!&quot;</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Only one column detected from import using these seperators: </span><span class="si">{</span><span class="n">common_seperators</span><span class="si">}</span><span class="s2">. See if csv template is correct.&quot;</span>
+
+    <span class="c1"># LINES TO DEAL WITH RANDOM PIECES OF TEXT BEFORE ACTUAL MEASUREMENTS</span>
+    <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">pat</span><span class="o">=</span><span class="s2">&quot;Unnamed&quot;</span><span class="p">):</span>
+        <span class="n">num_columns</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="n">rows_to_skip</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row</span> <span class="p">:</span> <span class="p">(</span><span class="n">row</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="p">:]</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="n">num_columns</span><span class="p">:</span>
+                <span class="n">rows_to_skip</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">rows_to_skip</span><span class="p">:,</span> <span class="p">:]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">df</span>
+
+<span class="k">def</span> <span class="nf">_remove_keys_from_dict</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="n">dictionary</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dictionary</span>
+
+
+<div class="viewcode-block" id="import_data_from_csv"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.data_import.import_data_from_csv.html#metobs_toolkit.data_import.import_data_from_csv">[docs]</a><span class="k">def</span> <span class="nf">import_data_from_csv</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">template_file</span><span class="p">,</span>
+                         <span class="n">long_format</span><span class="p">,</span> <span class="n">obstype</span><span class="p">,</span>
+                         <span class="n">obstype_units</span><span class="p">,</span> <span class="n">obstype_description</span><span class="p">,</span>
+                         <span class="n">kwargs_data_read</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Wrapper data import function for long and wide&quot;&quot;&quot;</span>
+
+    <span class="c1"># 1. Read data into df</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">_read_csv_file</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">kwargs_data_read</span><span class="p">)</span>
+
+    <span class="c1"># 2. Read template</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">read_csv_template</span><span class="p">(</span><span class="n">template_file</span><span class="p">,</span> <span class="n">long_format</span><span class="p">,</span> <span class="n">obstype</span><span class="p">)</span>
+    <span class="n">invtemplate</span> <span class="o">=</span> <span class="n">template_to_package_space</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+
+    <span class="c1"># 3. Make datetime column (needed for wide to long conversion)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;datetime&#39;</span> <span class="ow">in</span> <span class="n">invtemplate</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">invtemplate</span><span class="p">[</span><span class="s1">&#39;datetime&#39;</span><span class="p">][</span><span class="s1">&#39;orig_name&#39;</span><span class="p">]</span> <span class="p">:</span> <span class="s1">&#39;datetime&#39;</span><span class="p">})</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;datetime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;datetime&quot;</span><span class="p">],</span>
+                                        <span class="nb">format</span><span class="o">=</span><span class="n">invtemplate</span><span class="p">[</span><span class="s2">&quot;datetime&quot;</span><span class="p">][</span><span class="s2">&quot;format&quot;</span><span class="p">])</span>
+
+        <span class="n">inv_temp_remove_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;datetime&#39;</span><span class="p">]</span>
+        <span class="n">temp_remove_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">invtemplate</span><span class="p">[</span><span class="s1">&#39;datetime&#39;</span><span class="p">][</span><span class="s1">&#39;orig_name&#39;</span><span class="p">]]</span>
+    <span class="k">elif</span> <span class="p">((</span><span class="s1">&#39;_date&#39;</span> <span class="ow">in</span> <span class="n">invtemplate</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&amp;</span> <span class="p">(</span><span class="s1">&#39;_time&#39;</span> <span class="ow">in</span> <span class="n">invtemplate</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+
+        <span class="n">datetime_fmt</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">invtemplate</span><span class="p">[</span><span class="s2">&quot;_date&quot;</span><span class="p">][</span><span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">invtemplate</span><span class="p">[</span><span class="s2">&quot;_time&quot;</span><span class="p">][</span><span class="s2">&quot;format&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;datetime&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">invtemplate</span><span class="p">[</span><span class="s1">&#39;_date&#39;</span><span class="p">][</span><span class="s1">&#39;orig_name&#39;</span><span class="p">]]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">df</span><span class="p">[</span><span class="n">invtemplate</span><span class="p">[</span><span class="s1">&#39;_time&#39;</span><span class="p">][</span><span class="s1">&#39;orig_name&#39;</span><span class="p">]],</span> <span class="nb">format</span><span class="o">=</span><span class="n">datetime_fmt</span>
+        <span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">invtemplate</span><span class="p">[</span><span class="s1">&#39;_date&#39;</span><span class="p">][</span><span class="s1">&#39;orig_name&#39;</span><span class="p">],</span> <span class="n">invtemplate</span><span class="p">[</span><span class="s1">&#39;_time&#39;</span><span class="p">][</span><span class="s1">&#39;orig_name&#39;</span><span class="p">]])</span>
+
+        <span class="n">inv_temp_remove_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;_time&#39;</span><span class="p">,</span> <span class="s1">&#39;_date&#39;</span><span class="p">]</span>
+        <span class="n">temp_remove_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">invtemplate</span><span class="p">[</span><span class="s1">&#39;_date&#39;</span><span class="p">][</span><span class="s1">&#39;orig_name&#39;</span><span class="p">],</span>
+                            <span class="n">invtemplate</span><span class="p">[</span><span class="s1">&#39;_time&#39;</span><span class="p">][</span><span class="s1">&#39;orig_name&#39;</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s1">&#39;Impossible to map the dataset to a datetime column, verify your template please.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 3.b Remove the datetime keys from the template</span>
+
+    <span class="n">invtemplate</span> <span class="o">=</span> <span class="n">_remove_keys_from_dict</span><span class="p">(</span><span class="n">invtemplate</span><span class="p">,</span> <span class="n">inv_temp_remove_keys</span><span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">_remove_keys_from_dict</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">temp_remove_keys</span><span class="p">)</span>
+
+
+
+    <span class="c1"># 4. convert wide data to long if needed</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">long_format</span><span class="p">:</span>
+
+        <span class="n">template</span><span class="p">[</span><span class="n">obstype</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">invtemplate</span><span class="p">[</span><span class="n">obstype</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">template</span><span class="p">[</span><span class="n">obstype</span><span class="p">][</span><span class="s1">&#39;varname&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obstype</span>
+        <span class="n">invtemplate</span><span class="p">[</span><span class="n">obstype</span><span class="p">][</span><span class="s1">&#39;orig_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obstype</span> <span class="c1">#use default as orig name</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">obstype_units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">template</span><span class="p">[</span><span class="n">obstype</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obstype_units</span>
+            <span class="n">invtemplate</span><span class="p">[</span><span class="n">obstype</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obstype_units</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">obstype_description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">template</span><span class="p">[</span><span class="n">obstype</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obstype_description</span>
+            <span class="n">invtemplate</span><span class="p">[</span><span class="n">obstype</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obstype_description</span>
+
+        <span class="n">df</span><span class="p">,</span> <span class="n">template</span> <span class="o">=</span> <span class="n">wide_to_long</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">obstype</span><span class="p">)</span>
+
+
+    <span class="c1"># 5. check compatibility</span>
+    <span class="n">check_template_compatibility</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
+
+
+    <span class="c1"># 6. map to default name space</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">compress_dict</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="s2">&quot;varname&quot;</span><span class="p">))</span>
+
+    <span class="c1"># 7. Keep only columns as defined in the template</span>
+    <span class="n">cols_to_keep</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">invtemplate</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">cols_to_keep</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;datetime&#39;</span><span class="p">)</span>
+    <span class="n">cols_to_keep</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+    <span class="n">cols_to_keep</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">cols_to_keep</span><span class="p">))</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">cols_to_keep</span><span class="p">)]</span>
+
+
+
+    <span class="c1"># 8. Set index</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;datetime&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 8. map to numeric dtypes</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">observation_types</span><span class="p">:</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;coerce&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="s1">&#39;lat&#39;</span><span class="p">]:</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;coerce&#39;</span><span class="p">)</span>
+
+
+    <span class="c1"># add template to the return</span>
+    <span class="k">return</span> <span class="n">df</span><span class="p">,</span> <span class="n">invtemplate</span></div>
+
+
+
+
+<span class="c1"># %%</span>
+<div class="viewcode-block" id="import_data_from_db"><a class="viewcode-back" href="../../_autosummary/metobs_toolkit.data_import.import_data_from_db.html#metobs_toolkit.data_import.import_data_from_db">[docs]</a><span class="k">def</span> <span class="nf">import_data_from_db</span><span class="p">(</span><span class="n">db_settings</span><span class="p">,</span> <span class="n">start_datetime</span><span class="p">,</span> <span class="n">end_datetime</span><span class="p">):</span>
+    <span class="c1"># =============================================================================</span>
+    <span class="c1"># Make connection to database</span>
+    <span class="c1"># =============================================================================</span>
+
+    <span class="c1"># Make connection with database (needs ugent VPN active)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">connection</span> <span class="o">=</span> <span class="n">mysql</span><span class="o">.</span><span class="n">connector</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="n">host</span><span class="o">=</span><span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;db_host&quot;</span><span class="p">],</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;db_database&quot;</span><span class="p">],</span>
+            <span class="n">user</span><span class="o">=</span><span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;db_user&quot;</span><span class="p">],</span>
+            <span class="n">password</span><span class="o">=</span><span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;db_passw&quot;</span><span class="p">],</span>
+            <span class="n">connection_timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">mysql</span><span class="o">.</span><span class="n">connector</span><span class="o">.</span><span class="n">Error</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">err</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errorcode</span><span class="o">.</span><span class="n">ER_ACCESS_DENIED_ERROR</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Something is wrong with your user name or password!&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Make shure the following envrionment variables are defind:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    VLINDER_DB_USER_NAME&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    VLINDER_DB_USER_PASW&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;or update the Settings.db_user and Settings.db_passw&quot;</span><span class="p">)</span>
+
+            <span class="c1"># TODO use default return</span>
+            <span class="k">return</span> <span class="n">init_multiindexdf</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">err</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="mi">2003</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;Can&#39;t connect to &quot;</span><span class="p">,</span>
+                <span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;db_host&quot;</span><span class="p">],</span>
+                <span class="s2">&quot; host. Make shure your Ugent VPN is on!&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># sys.exit()</span>
+            <span class="c1"># TODO use default return</span>
+            <span class="k">return</span> <span class="n">init_multiindexdf</span><span class="p">()</span>
+
+    <span class="c1"># =============================================================================</span>
+    <span class="c1"># Read all meta data from database</span>
+    <span class="c1"># =============================================================================</span>
+
+    <span class="n">metadata_Query</span> <span class="o">=</span> <span class="s2">&quot;select * from &quot;</span> <span class="o">+</span> <span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;db_meta_table&quot;</span><span class="p">]</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+    <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">metadata_Query</span><span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="c1"># metadata_columns = list(cursor.column_names)</span>
+
+    <span class="n">metadata</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cursor</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+
+    <span class="c1"># subset relevent columns</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;vlinder_db_meta_template&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())]</span>
+
+    <span class="c1"># rename columns to standards</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+        <span class="n">columns</span><span class="o">=</span><span class="n">compress_dict</span><span class="p">(</span><span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;vlinder_db_meta_template&quot;</span><span class="p">],</span> <span class="s2">&quot;varname&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># COnvert template to package-space</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">template_to_package_space</span><span class="p">(</span><span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;vlinder_db_meta_template&quot;</span><span class="p">])</span>
+
+    <span class="c1"># format columns</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">compress_dict</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="s2">&quot;dtype&quot;</span><span class="p">))</span>
+
+    <span class="c1"># =============================================================================</span>
+    <span class="c1"># Read observations data</span>
+    <span class="c1"># =============================================================================</span>
+
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="n">start_datetime</span> <span class="o">&lt;</span> <span class="n">end_datetime</span>
+    <span class="p">),</span> <span class="s2">&quot;start_datetime is not earlier thand end_datetime!&quot;</span>
+
+    <span class="n">observation_types</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">]</span>
+
+    <span class="c1"># observation types to strig</span>
+    <span class="k">if</span> <span class="n">observation_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+        <span class="n">obs_type_query_str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># TODO</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;NOT IMPLEMENTED YET&quot;</span><span class="p">)</span>
+        <span class="n">obs_type_query_str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
+
+    <span class="c1"># format datetime</span>
+
+    <span class="n">datetime_db_info</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">item</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;vlinder_db_obs_template&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;varname&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;datetime&quot;</span>
+    <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">startstring</span> <span class="o">=</span> <span class="n">start_datetime</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span>
+        <span class="nb">format</span><span class="o">=</span><span class="n">datetime_db_info</span><span class="p">[</span><span class="s2">&quot;fmt&quot;</span><span class="p">]</span>
+    <span class="p">)</span>  <span class="c1"># datetime to string</span>
+    <span class="n">endstring</span> <span class="o">=</span> <span class="n">end_datetime</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span>
+        <span class="nb">format</span><span class="o">=</span><span class="n">datetime_db_info</span><span class="p">[</span><span class="s2">&quot;fmt&quot;</span><span class="p">]</span>
+    <span class="p">)</span>  <span class="c1"># datetime to string</span>
+    <span class="n">_inverted_template</span> <span class="o">=</span> <span class="n">template_to_package_space</span><span class="p">(</span>
+        <span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;vlinder_db_obs_template&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">datetime_column_name</span> <span class="o">=</span> <span class="n">_inverted_template</span><span class="p">[</span><span class="s2">&quot;datetime&quot;</span><span class="p">][</span><span class="s2">&quot;orig_name&quot;</span><span class="p">]</span>
+
+    <span class="c1"># select all stations</span>
+    <span class="n">obsdata_Query</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">str</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;SELECT &quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">obs_type_query_str</span>
+        <span class="o">+</span> <span class="s2">&quot; &quot;</span>
+        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;FROM &quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;db_obs_table&quot;</span><span class="p">]</span>
+        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;WHERE &quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">datetime_column_name</span>
+        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;&gt;=&#39;&quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">startstring</span>
+        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;&#39; AND &quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">datetime_column_name</span>
+        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;&lt;=&#39;&quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">endstring</span>
+        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;&#39;  &quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;ORDER BY &quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">datetime_column_name</span>
+    <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">obsdata_Query</span><span class="p">)</span>
+
+    <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">obsdata_Query</span><span class="p">)</span>
+    <span class="n">obsdata</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+    <span class="n">obsdata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">obsdata</span><span class="p">)</span>
+
+    <span class="n">obsdata</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cursor</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+
+    <span class="c1"># subset relevent columns</span>
+    <span class="n">obsdata</span> <span class="o">=</span> <span class="n">obsdata</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;vlinder_db_obs_template&quot;</span><span class="p">])]</span>
+
+    <span class="c1"># format columns</span>
+    <span class="n">obsdata</span> <span class="o">=</span> <span class="n">obsdata</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">compress_dict</span><span class="p">(</span><span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;vlinder_db_obs_template&quot;</span><span class="p">],</span> <span class="s2">&quot;dtype&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># rename columns to standards</span>
+    <span class="n">obsdata</span> <span class="o">=</span> <span class="n">obsdata</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+        <span class="n">columns</span><span class="o">=</span><span class="n">compress_dict</span><span class="p">(</span><span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;vlinder_db_obs_template&quot;</span><span class="p">],</span> <span class="s2">&quot;varname&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># =============================================================================</span>
+    <span class="c1"># merge Observatios and metadata</span>
+    <span class="c1"># =============================================================================</span>
+
+    <span class="n">combdata</span> <span class="o">=</span> <span class="n">obsdata</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+    <span class="n">combdata</span> <span class="o">=</span> <span class="n">combdata</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+    <span class="n">combdata</span><span class="p">[</span><span class="s2">&quot;datetime&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span>
+        <span class="n">combdata</span><span class="p">[</span><span class="s2">&quot;datetime&quot;</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="n">datetime_db_info</span><span class="p">[</span><span class="s2">&quot;fmt&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="c1"># TODO implement timezone settings</span>
+
+    <span class="c1"># Set datetime index</span>
+    <span class="n">combdata</span> <span class="o">=</span> <span class="n">combdata</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;datetime&quot;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verify_integrity</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">combdata</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Thomas Vergauwen.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-XXXXXXXXXX', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

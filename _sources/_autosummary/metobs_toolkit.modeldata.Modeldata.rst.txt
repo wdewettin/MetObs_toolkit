@@ -1,0 +1,33 @@
+metobs\_toolkit.modeldata.Modeldata
+===================================
+
+.. currentmodule:: metobs_toolkit.modeldata
+
+.. autoclass:: Modeldata
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Modeldata.add_band_to_gee_dataset
+      ~Modeldata.add_gee_dataset
+      ~Modeldata.convert_units_to_tlk
+      ~Modeldata.get_ERA5_data
+      ~Modeldata.get_gee_dataset_data
+      ~Modeldata.interpolate_modeldata
+      ~Modeldata.list_gee_datasets
+      ~Modeldata.make_plot
+      ~Modeldata.set_model_from_csv
+   
+   
+
+   
+   
+   

@@ -1,0 +1,32 @@
+metobs\_toolkit.gui\_launcher
+=============================
+
+.. automodule:: metobs_toolkit.gui_launcher
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      launch_gui
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+

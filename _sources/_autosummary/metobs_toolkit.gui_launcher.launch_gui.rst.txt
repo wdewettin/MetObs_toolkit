@@ -1,0 +1,6 @@
+metobs\_toolkit.gui\_launcher.launch\_gui
+=========================================
+
+.. currentmodule:: metobs_toolkit.gui_launcher
+
+.. autofunction:: launch_gui
